@@ -67,19 +67,7 @@ android {
 
         }
     }
-    android.applicationVariants.all { variant ->
-        def type = variant.buildType.name;
-        def zipalign = variant.buildType.zipAlignEnabled;
-        variant.outputs.each { output ->
-            def outputFile = output.outputFile
-            if (outputFile != null && outputFile.name.endsWith('.apk')) {
-                def fileName = "app-${variant.productFlavors[0].name}-${type}-${productFlavors.versionName}-${buildDate()}"
-                if(!zipalign){ fileName +="-unaligned" }
-                fileName +=".apk";
-                output.outputFile = new File(outputFile.parent, fileName)
-            }
-        }
-    }
+
 }
 
 dependencies {
