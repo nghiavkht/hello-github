@@ -20,7 +20,7 @@ android {
     buildToolsVersion "23.0.2"
 
     defaultConfig {
-        applicationId "hellojenkin.tera.com.myapplication"
+        applicationId "com.tera.hellojenkin"
         minSdkVersion 15
         targetSdkVersion 23
         versionCode 1
@@ -42,29 +42,27 @@ android {
     }
 
     buildTypes {
-        def relTime = "${buildDate()}-${buildTime()}"
-        debug{
-            relType = "debug";
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-        prod {
-            relType = "prod";
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            zipAlignEnabled true
-        }
-        uat {
-            relType = "uat";
+
+        release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             zipAlignEnabled true
         }
     }
 
+//    productFlavors {
+//        traders {
+//            signingConfig signingConfigs.traders
+//        }
+//    }
     productFlavors {
-        traders {
-            signingConfig signingConfigs.traders
+        uat {
+            applicationId = "com.tera.hellojenkin.uat"
+            versionName = "1.0-uat"
+        }
+        prod {
+            applicationId = "com.tera.hellojenkin"
+            versionName = "1.0-prod"
         }
     }
     android.applicationVariants.all { variant ->
@@ -73,7 +71,7 @@ android {
         variant.outputs.each { output ->
             def outputFile = output.outputFile
             if (outputFile != null && outputFile.name.endsWith('.apk')) {
-                def fileName = "app-${variant.productFlavors[0].name}-${type}-${defaultConfig.versionName}-${buildDate()}"
+                def fileName = "app-${variant.productFlavors[0].name}-${type}-${productFlavors.versionName}-${buildDate()}"
                 if(!zipalign){ fileName +="-unaligned" }
                 fileName +=".apk";
                 output.outputFile = new File(outputFile.parent, fileName)
