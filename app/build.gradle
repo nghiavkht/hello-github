@@ -56,13 +56,15 @@ android {
 //        }
 //    }
     productFlavors {
-        uat {
+        Uat {
             applicationId = "com.tera.hellojenkin.uat"
             versionName = "1.0-uat"
         }
-        prod {
+        Prod {
             applicationId = "com.tera.hellojenkin"
             versionName = "1.0-prod"
+            signingConfig signingConfigs.traders
+
         }
     }
     android.applicationVariants.all { variant ->
