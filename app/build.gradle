@@ -1,6 +1,21 @@
+import java.text.SimpleDateFormat
+
 apply plugin: 'com.android.application'
 
+def buildTime() {
+    def df = new SimpleDateFormat("HHmmss")
+    df.setTimeZone(TimeZone.getDefault())
+    return df.format(new Date())
+}
+
+def buildDate() {
+    def df = new SimpleDateFormat("yyyyMMdd")
+    df.setTimeZone(TimeZone.getDefault())
+    return df.format(new Date())
+}
+
 android {
+    def relType;
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
 
@@ -11,10 +26,58 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+    signingConfigs {
+//        debug {
+//            storeFile file("src/main/keystore/debug.keystore")
+//            storePassword "android"
+//            keyPassword "android"
+//        }
+        traders {
+            storeFile file("extras/trader.keystore")
+            storePassword 'trader2015'
+            keyAlias 'traderandroid'
+            keyPassword 'trader2015'
+        }
+    }
+
     buildTypes {
-        release {
+        def relTime = "${buildDate()}-${buildTime()}"
+        debug{
+            relType = "debug";
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        prod {
+            relType = "prod";
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            zipAlignEnabled true
+        }
+        uat {
+            relType = "uat";
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            zipAlignEnabled true
+        }
+    }
+
+    productFlavors {
+        traders {
+            signingConfig signingConfigs.traders
+        }
+    }
+    android.applicationVariants.all { variant ->
+        def type = variant.buildType.name;
+        def zipalign = variant.buildType.zipAlignEnabled;
+        variant.outputs.each { output ->
+            def outputFile = output.outputFile
+            if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                def fileName = "app-${variant.productFlavors[0].name}-${type}-${defaultConfig.versionName}-${buildDate()}"
+                if(!zipalign){ fileName +="-unaligned" }
+                fileName +=".apk";
+                output.outputFile = new File(outputFile.parent, fileName)
+            }
         }
     }
 }
