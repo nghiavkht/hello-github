@@ -9,7 +9,7 @@ def buildTime() {
 }
 
 def buildDate() {
-    def df = new SimpleDateFormat("yyyyMMdd")
+    def df = new SimpleDateFormat("yyyyMMdd-HHmm")
     df.setTimeZone(TimeZone.getDefault())
     return df.format(new Date())
 }
@@ -64,8 +64,56 @@ android {
             applicationId = "com.tera.hellojenkin"
             versionName = "1.0-prod"
             signingConfig signingConfigs.traders
-
         }
+    }
+    android.applicationVariants.all { variant ->
+        def type = variant.buildType.name;
+        variant.outputs.each { output ->
+            def outputFile = output.outputFile
+            if (outputFile != null && outputFile.name.endsWith('.apk') && type != "debug") {
+
+                def fileName = "app-${variant.productFlavors[0].name}-${type}-${variant.productFlavors[0].versionName}-${buildDate()}"
+                fileName += ".apk";
+                println "abc fileName " + fileName
+                output.outputFile = new File(outputFile.parent, fileName)
+            }
+        }
+    }
+// delete unaligned files
+    android.applicationVariants.all { variant ->
+        variant.assemble.doLast {
+            variant.outputs.each { output ->
+                if (variant.buildType.name != "debug") {
+                    println "abc aligned " + output.outputFile
+                    println "abc unaligned " + output.packageApplication.outputFile
+
+                    File unaligned = output.packageApplication.outputFile;
+                    File aligned = output.outputFile
+                    if (!unaligned.getName().equalsIgnoreCase(aligned.getName())) {
+                        println "abc deleting " + unaligned.getName()
+                        unaligned.delete()
+                    }
+                }
+            }
+        }
+    }
+
+
+    task copyOutputApk(type: Copy) {
+        from 'build/outputs/apk'
+        into 'apk'
+        exclude '**/*-unaligned.apk'
+    }
+
+    task buildTestDebug(dependsOn: ['clean', 'assembleDebug', 'check', 'copyOutputApk']) {
+        assembleDebug.mustRunAfter clean
+        check.mustRunAfter assembleDebug
+        copyOutputApk.mustRunAfter check
+    }
+    task buildTestRelease(dependsOn: ['clean', 'assembleRelease', 'check', 'copyOutputApk']) {
+        assembleRelease.mustRunAfter clean
+        check.mustRunAfter assembleRelease
+        copyOutputApk.mustRunAfter check
     }
 
 }
